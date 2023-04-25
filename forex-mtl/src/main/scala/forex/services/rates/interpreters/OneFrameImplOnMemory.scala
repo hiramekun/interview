@@ -3,24 +3,31 @@ package forex.services.rates.interpreters
 import cats.effect.Sync
 import cats.implicits.{catsSyntaxApplicativeId, catsSyntaxEitherId, toFunctorOps}
 import com.google.common.cache.CacheBuilder
-import forex.domain.model.Rate
+import forex.domain.model.{CurrencyPairList, Rate}
 import forex.http.external.oneframe.OneFrameClient
-import forex.services.rates.errors
+import forex.services.rates.Algebra
+import forex.services.rates.errors.Error
 
 import java.util.concurrent.TimeUnit
 import scala.collection.mutable
 import scala.jdk.CollectionConverters.ConcurrentMapHasAsScala
 
-class OneFrameImplOnMemory[F[_]: Sync](client: OneFrameClient[F]) extends OneFrameImpl[F](client) {
-  override def get(pair: Rate.Pair): F[Either[errors.Error, Rate]] =
-    Cache.concurrentHashMap.get(pair) match {
-      case Some(rate) => rate.asRight[errors.Error].pure[F]
+class OneFrameImplOnMemory[F[_]: Sync](client: OneFrameClient[F]) extends Algebra[F] {
+  import Cache.{concurrentHashMap => cache}
+
+  /**
+    * Get rate from cache or from OneFrame API.
+    * If the cache is empty, it will retrieve all rates from OneFrame API and cache them.
+    */
+  override def get(pair: Rate.Pair): F[Either[Error, Rate]] =
+    cache.get(pair) match {
+      case Some(rate) => rate.asRight[Error].pure[F]
       case None =>
-        super.get(pair).map {
-          case Right(rate) =>
-            Cache.concurrentHashMap.put(pair, rate)
-            rate.asRight
-          case Left(error) => error.asLeft
+        client.getRates(CurrencyPairList.all).map {
+          case Nil => Left(Error.OneFrameLookupFailed("no pair to retrieve"))
+          case allRates =>
+            cache.addAll(CurrencyPairList.all zip allRates)
+            cache(pair).asRight
         }
     }
 }
