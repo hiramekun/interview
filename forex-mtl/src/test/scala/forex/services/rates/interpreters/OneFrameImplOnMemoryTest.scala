@@ -1,11 +1,11 @@
 package forex.services.rates.interpreters
 
-import org.scalatest.matchers.should.Matchers
 import cats.effect.IO
 import cats.implicits.toTraverseOps
-import forex.domain.model.{ Currency, Price, Rate, Timestamp }
+import forex.domain.model.{Currency, Price, Rate, Timestamp}
 import forex.http.external.oneframe.OneFrameClient
 import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 class OneFrameImplOnMemoryTest extends AnyFunSpec with Matchers {
 
@@ -19,10 +19,10 @@ class OneFrameImplOnMemoryTest extends AnyFunSpec with Matchers {
 
   describe("OneFrameImplOnMemory") {
     it("return cached rate if it exists") {
-      val client               = new TestOneFrameClient()
-      val oneFrameImplOnMemory = new OneFrameImplOnMemory[IO](client)
-
       val testPair = Rate.Pair(Currency.USD, Currency.JPY)
+      val client   = new TestOneFrameClient()
+
+      val oneFrameImplOnMemory = new OneFrameImplOnMemory[IO](Seq(testPair), client)
 
       for {
         // First, get the rate to ensure it's cached

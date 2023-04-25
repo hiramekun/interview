@@ -12,7 +12,8 @@ import java.util.concurrent.TimeUnit
 import scala.collection.mutable
 import scala.jdk.CollectionConverters.ConcurrentMapHasAsScala
 
-class OneFrameImplOnMemory[F[_]: Sync](client: OneFrameClient[F]) extends Algebra[F] {
+class OneFrameImplOnMemory[F[_]: Sync](currencyPairListToBeCached: Seq[Rate.Pair], client: OneFrameClient[F])
+    extends Algebra[F] {
   import Cache.{concurrentHashMap => cache}
 
   /**
@@ -23,7 +24,7 @@ class OneFrameImplOnMemory[F[_]: Sync](client: OneFrameClient[F]) extends Algebr
     cache.get(pair) match {
       case Some(rate) => rate.asRight[Error].pure[F]
       case None =>
-        client.getRates(CurrencyPairList.all).map {
+        client.getRates(currencyPairListToBeCached).map {
           case Nil => Left(Error.OneFrameLookupFailed("no pair to retrieve"))
           case allRates =>
             cache.addAll(CurrencyPairList.all zip allRates)
