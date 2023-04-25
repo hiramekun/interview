@@ -1,7 +1,7 @@
 package forex.services.rates.interpreters
 
 import cats.effect.Sync
-import cats.implicits.toFunctorOps
+import cats.implicits.{catsSyntaxApplicativeId, catsSyntaxEitherId, toFunctorOps}
 import com.google.common.cache.CacheBuilder
 import forex.domain.model.Rate
 import forex.http.external.oneframe.OneFrameClient
@@ -14,13 +14,13 @@ import scala.jdk.CollectionConverters.ConcurrentMapHasAsScala
 class OneFrameImplOnMemory[F[_]: Sync](client: OneFrameClient[F]) extends OneFrameImpl[F](client) {
   override def get(pair: Rate.Pair): F[Either[errors.Error, Rate]] =
     Cache.concurrentHashMap.get(pair) match {
-      case Some(rate) => Sync[F].delay(Right(rate))
+      case Some(rate) => rate.asRight[errors.Error].pure[F]
       case None =>
         super.get(pair).map {
           case Right(rate) =>
             Cache.concurrentHashMap.put(pair, rate)
-            Right(rate)
-          case Left(error) => Left(error)
+            rate.asRight
+          case Left(error) => error.asLeft
         }
     }
 }
