@@ -1,6 +1,6 @@
 package forex.http.external.oneframe
 
-import forex.domain.model.{Currency, Price, Rate, Timestamp}
+import forex.domain.model.{ Currency, Price, Rate, Timestamp }
 import forex.http.external.oneframe.Protocol.RateResponse
 
 import java.time.OffsetDateTime
