@@ -2,12 +2,13 @@ package forex.http.external.oneframe
 
 import cats.ApplicativeError
 import cats.effect.Sync
-import cats.implicits.{ catsSyntaxApplicativeError, toFunctorOps }
+import cats.implicits.{catsSyntaxApplicativeError, toFunctorOps}
 import forex.domain.model.Rate
 import forex.http.external.oneframe.Converters.RateOps
 import forex.http.external.oneframe.Protocol.RateResponse
+import forex.http.external.oneframe.QueryParams.ratePairQueryParamEncoder
 import org.http4s.client.Client
-import org.http4s.{ Header, Method, Request, Uri }
+import org.http4s.{Header, Method, Request, Uri}
 
 class OneFrameHttpClient[F[_]: Sync](token: String, httpClient: Client[F])(
     implicit applicativeError: ApplicativeError[F, Throwable]
@@ -17,7 +18,7 @@ class OneFrameHttpClient[F[_]: Sync](token: String, httpClient: Client[F])(
   private val authToken = Header("token", token)
 
   def getRates(pairs: Seq[Rate.Pair]): F[Seq[Rate]] = {
-    val uri     = baseUri.withPath("/rates").withQueryParam("pair", pairs.mkString("&pair="))
+    val uri     = baseUri.withPath("/rates").withMultiValueQueryParams(Map("pair" -> pairs))
     val request = Request[F](Method.GET, uri).withHeaders(authToken)
 
     httpClient
