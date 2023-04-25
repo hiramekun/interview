@@ -2,7 +2,7 @@ package forex.http.external.oneframe
 
 import cats.effect._
 import cats.effect.testing.scalatest.AsyncIOSpec
-import forex.domain.model.Currency.{EUR, JPY, USD}
+import forex.domain.model.Currency.{ EUR, JPY, USD }
 import forex.domain.model.Rate
 import org.http4s._
 import org.http4s.client.Client
