@@ -1,3 +1,7 @@
+The README for the project is available here.
+
+https://github.com/hiramekun/interview/tree/main/forex-mtl
+
 <img src="/paidy.png?raw=true" width=300 style="background-color:white;">
 
 # Paidy Take-Home Coding Exercises
